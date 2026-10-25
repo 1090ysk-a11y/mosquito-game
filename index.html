@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>みなとの蚊たたきゲーム</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+}
+
+body{
+overflow:hidden;
+font-family:sans-serif;
+background:linear-gradient(#87ceeb,#e0ffff);
+}
+
+#game{
+width:100vw;
+height:100vh;
+position:relative;
+overflow:hidden;
+}
+
+#score{
+position:absolute;
+top:15px;
+left:15px;
+font-size:32px;
+font-weight:bold;
+color:#222;
+z-index:1000;
+background:rgba(255,255,255,0.7);
+padding:8px 15px;
+border-radius:10px;
+}
+
+.mosquito{
+position:absolute;
+font-size:42px;
+pointer-events:none;
+user-select:none;
+animation:flap .1s infinite alternate;
+}
+
+@keyframes flap{
+from{transform:rotate(-10deg);}
+to{transform:rotate(10deg);}
+}
+
+.blood{
+position:absolute;
+width:35px;
+height:35px;
+background:red;
+border-radius:50%;
+opacity:.75;
+pointer-events:none;
+}
+
+#hand{
+position:absolute;
+width:140px;
+height:140px;
+display:none;
+pointer-events:none;
+z-index:999;
+}
+
+.palm{
+position:absolute;
+width:80px;
+height:80px;
+background:#f4c7a1;
+border-radius:45%;
+left:30px;
+top:40px;
+box-shadow:0 0 8px rgba(0,0,0,.3);
+}
+
+.finger{
+position:absolute;
+width:16px;
+height:55px;
+background:#f4c7a1;
+border-radius:10px;
+}
+
+.f1{left:28px;top:0;}
+.f2{left:50px;top:-5px;}
+.f3{left:72px;top:0;}
+.f4{left:94px;top:8px;}
+
+.thumb{
+position:absolute;
+width:20px;
+height:50px;
+background:#f4c7a1;
+border-radius:10px;
+left:10px;
+top:60px;
+transform:rotate(-40deg);
+}
+
+#clearScreen{
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+background:rgba(0,0,0,.85);
+z-index:5000;
+}
+
+#clearBox{
+text-align:center;
+}
+
+#clearText{
+font-size:64px;
+font-weight:bold;
+color:#fff;
+animation:pop .8s infinite alternate;
+text-shadow:0 0 20px gold;
+}
+
+@keyframes pop{
+from{transform:scale(1);}
+to{transform:scale(1.15);}
+}
+
+#restartBtn{
+margin-top:30px;
+padding:18px 40px;
+font-size:28px;
+font-weight:bold;
+border:none;
+border-radius:15px;
+background:#4caf50;
+color:white;
+cursor:pointer;
+}
+
+#restartBtn:active{
+transform:scale(.95);
+}
+
+@media(max-width:768px){
+
+#clearText{
+font-size:42px;
+}
+
+#restartBtn{
+font-size:22px;
+padding:15px 30px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<div id="score">
+SCORE : 0
+</div>
+
+<div id="hand">
+<div class="palm"></div>
+<div class="finger f1"></div>
+<div class="finger f2"></div>
+<div class="finger f3"></div>
+<div class="finger f4"></div>
+<div class="thumb"></div>
+</div>
+
+</div>
+
+<div id="clearScreen">
+
+<div id="clearBox">
+
+<div id="clearText">
+🎉 みなとスゴイ！ 🎉
+</div>
+
+<button id="restartBtn">
+もう一度する
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const game = document.getElementById("game");
+const scoreLabel = document.getElementById("score");
+const hand = document.getElementById("hand");
+const clearScreen = document.getElementById("clearScreen");
+const restartBtn = document.getElementById("restartBtn");
+
+let score = 0;
+let mosquitos = [];
+const START_COUNT = 10;
+
+function createMosquito(){
+
+const m = document.createElement("div");
+
+m.className = "mosquito";
+m.innerHTML = "🦟";
+
+m.x = Math.random() * (window.innerWidth - 60);
+m.y = Math.random() * (window.innerHeight - 60);
+
+m.vx = (Math.random()-0.5) * 7;
+m.vy = (Math.random()-0.5) * 7;
+
+m.style.left = m.x + "px";
+m.style.top = m.y + "px";
+
+game.appendChild(m);
+
+mosquitos.push(m);
+}
+
+function createMosquitos(){
+
+for(let i=0;i<START_COUNT;i++){
+createMosquito();
+}
+
+}
+
+function animate(){
+
+for(const m of mosquitos){
+
+m.x += m.vx;
+m.y += m.vy;
+
+if(Math.random() < 0.02){
+
+m.vx = (Math.random()-0.5) * 10;
+m.vy = (Math.random()-0.5) * 10;
+
+}
+
+if(m.x < 0 || m.x > window.innerWidth-50){
+m.vx *= -1;
+}
+
+if(m.y < 0 || m.y > window.innerHeight-50){
+m.vy *= -1;
+}
+
+m.style.left = m.x + "px";
+m.style.top = m.y + "px";
+}
+
+requestAnimationFrame(animate);
+
+}
+
+function showHand(x,y){
+
+hand.style.display="block";
+
+hand.style.left=(x-70)+"px";
+hand.style.top=(y-70)+"px";
+
+hand.animate(
+[
+{transform:"scale(1.4) rotate(-10deg)"},
+{transform:"scale(0.9) rotate(0deg)"}
+],
+{
+duration:120,
+fill:"forwards"
+}
+);
+
+setTimeout(()=>{
+hand.style.display="none";
+},120);
+
+}
+
+function createBlood(x,y){
+
+const blood=document.createElement("div");
+
+blood.className="blood";
+
+blood.style.left=x+"px";
+blood.style.top=y+"px";
+
+game.appendChild(blood);
+
+setTimeout(()=>{
+blood.remove();
+},3000);
+
+}
+
+function clearGame(){
+
+clearScreen.style.display="flex";
+
+if(navigator.vibrate){
+navigator.vibrate([200,100,200]);
+}
+
+}
+
+function smash(x,y){
+
+showHand(x,y);
+
+for(let i=mosquitos.length-1;i>=0;i--){
+
+const m=mosquitos[i];
+
+const mx=m.x+20;
+const my=m.y+20;
+
+const distance=Math.hypot(mx-x,my-y);
+
+if(distance<60){
+
+createBlood(mx-15,my-15);
+
+m.remove();
+
+mosquitos.splice(i,1);
+
+score++;
+
+scoreLabel.textContent=
+"SCORE : "+score;
+
+if(navigator.vibrate){
+navigator.vibrate(30);
+}
+
+if(mosquitos.length===0){
+setTimeout(clearGame,300);
+}
+
+}
+}
+
+}
+
+function restartGame(){
+
+document
+.querySelectorAll(".blood")
+.forEach(b=>b.remove());
+
+document
+.querySelectorAll(".mosquito")
+.forEach(m=>m.remove());
+
+score=0;
+mosquitos=[];
+
+scoreLabel.textContent=
+"SCORE : 0";
+
+clearScreen.style.display="none";
+
+createMosquitos();
+
+}
+
+game.addEventListener("click",(e)=>{
+smash(e.clientX,e.clientY);
+});
+
+game.addEventListener("touchstart",(e)=>{
+
+const t=e.touches[0];
+
+smash(t.clientX,t.clientY);
+
+},{passive:true});
+
+restartBtn.addEventListener(
+"click",
+restartGame
+);
+
+createMosquitos();
+animate();
+
+</script>
+
+</body>
+</html>
